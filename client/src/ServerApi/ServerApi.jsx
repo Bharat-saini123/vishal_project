@@ -1,2 +1,2 @@
-const ServerApi="https://vishal-project.onrender.com";
+const ServerApi="http://localhost:7000";
 export default ServerApi;

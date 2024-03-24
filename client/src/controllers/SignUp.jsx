@@ -85,6 +85,13 @@ const SignUp = () => {
       toast.error(data.message, {
         autoClose: 2000,
       });
+      if (data.message.length !==0||data.message.length!==null) {
+        for (let messages of data.message) {
+          toast.error(messages.message, {
+            autoClose: 2000,
+          });
+        }
+      }
     } else {
       if (data.success === true) {
         toast.success(data.message, {

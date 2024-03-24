@@ -7,6 +7,8 @@ import createErrors from "../Errors/createErrors.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import vineSchema from "../Vine/vineSchema.js";
+import vine, { errors } from "@vinejs/vine";
 const SignUp = async (req, res, next) => {
   try {
     let { firstName, lastName, email, phone, password, confirmPassword } =
@@ -20,9 +22,17 @@ const SignUp = async (req, res, next) => {
       !confirmPassword
     )
       return res.json(createErrors(404, "all fields are required", false));
-      const validEmail=validator.isEmail(email);
-      const validPhone=validator.isMobilePhone(phone);
-      if(!validEmail||!validPhone) return res.json(createErrors(400,"email or phone incorrect",false));
+    const data = {
+      ...req.body,
+    };
+
+    const schemaValidator = vine.compile(vineSchema);
+    const output = await schemaValidator.validate(data);
+
+    const validEmail = validator.isEmail(email);
+    const validPhone = validator.isMobilePhone(phone);
+    if (!validEmail || !validPhone)
+      return res.json(createErrors(400, "email or phone incorrect", false));
     const checkEmail = await User.findOne({
       email: req.body.email,
     });
@@ -35,10 +45,7 @@ const SignUp = async (req, res, next) => {
     password = await bcrypt.hash(req.body.password, 10);
 
     const user = await new User({
-      firstName,
-      lastName,
-      email,
-      phone,
+      ...output,
       password,
     });
     await user.save();
@@ -53,6 +60,9 @@ const SignUp = async (req, res, next) => {
       user,
     });
   } catch (err) {
+    console.log(err.messages);
+    if (err instanceof errors.E_VALIDATION_ERROR)
+      return res.json(createErrors(404, err.messages, false));
     return next(err);
   }
 };
